@@ -2,8 +2,12 @@
 title Diagrama de Clases DAO — Venta de Tiquetes y Mensajería (Copetran)
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
-skinparam nodesep 30
-skinparam ranksep 55
+skinparam nodesep 45
+skinparam ranksep 80
+skinparam class {
+  ArrowFontSize 13
+  ArrowFontStyle bold
+}
 
 package "Capa de Acceso a Datos (DAO)" {
   interface GenericDAO<T> {
@@ -145,7 +149,7 @@ package "Capa de Entidades (Modelo de Dominio)" {
     +recalcularTotales(): void
   }
 
-  Tiquete "*" -up-> "1" ViajeProgramado
+  Tiquete "*" -left-> "1" ViajeProgramado
   Tiquete "1" -up-> "1" Factura
   Tiquete "*" -down-> "1" Cliente : id_pasajero
   Factura "*" --> "1" Empleado : id_cajero

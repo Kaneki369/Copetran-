@@ -384,6 +384,7 @@ genérica \texttt{GenericDAO<T>}.
 
 % ---------------------------------------------------------------------------
 \section{Diagramas de Estados}
+\label{sec:diagramas-estados}
 % ---------------------------------------------------------------------------
 
 Se modelan los tres estados/ciclos de vida más ricos del sistema, correspondientes a las clases
@@ -491,20 +492,30 @@ llevó a una interfaz funcional y no se quedó solo en el papel.
 \subsection{Portal de inicio y acceso al sistema}
 
 La pantalla de inicio (\texttt{/}) presenta el buscador de pasajes y el rastreo de encomiendas de
-cara al cliente externo; el acceso al workspace operativo (\texttt{/login}) autentica por rol,
-coherente con RNF01 (control de acceso por cargo) y con los tres roles definidos en la Sección 1:
-Cliente, Cajero de Agencia y Operario de Bodega.
+cara al cliente externo; el acceso al workspace operativo (\texttt{/login}) exige seleccionar
+explícitamente uno de los tres roles definidos en la Sección 1 (Cliente, Cajero de Agencia y
+Operario de Bodega) y bloquea el acceso a \texttt{/dashboard} sin sesión activa. \textbf{Alcance
+real:} esto cubre la autenticación e identificación del rol (nombre + rol quedan visibles en el
+panel lateral durante toda la sesión), pero \textbf{no} restringe todavía qué pestañas del
+workspace puede ver cada rol --- las tres (Trazabilidad, Tiquetes, Mensajería) quedan visibles para
+cualquier rol autenticado. Por tanto RNF01 (control de acceso por cargo) está \emph{parcialmente}
+cubierto por la GUI actual: la identificación por rol sí existe, la restricción de funcionalidad
+por rol aún no; se deja explícito aquí para no sobrerrepresentar el alcance real (ver también la
+matriz de verificación al final de esta sección).
 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.92\linewidth]{capturas/gui-01-home.png}
   \caption{Portal de inicio --- buscador de pasajes y rastreo de encomiendas}
+  \label{fig:gui-home}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.92\linewidth]{capturas/gui-02-login.png}
-  \caption{Acceso al sistema --- autenticación por rol (RNF01)}
+  \caption{Acceso al sistema --- identificación por rol (RNF01, cobertura parcial: ver
+  Sección \ref{sec:matriz-verificacion-gui})}
+  \label{fig:gui-login}
 \end{figure}
 
 \clearpage
@@ -512,9 +523,14 @@ Cliente, Cajero de Agencia y Operario de Bodega.
 
 La primera pestaña del workspace no es solo una vista de solo lectura de la documentación: incluye
 KPIs calculados en tiempo real sobre los datos de prueba (tiquetes emitidos, recaudo estimado,
-guías de envío, guías con novedad) y una visualización interactiva de los dos diagramas de estados
-parametrizados (\texttt{ESTADO\_TIQUETE} y \texttt{ESTADO\_GUIA}), antes de mostrar las tablas de
-roles ya vistas en la Sección 2.
+guías de envío, guías con novedad) y un stepper visual --- de solo lectura, sin transiciones
+accionables desde aquí --- de los dos diagramas de estados parametrizados (\texttt{ESTADO\_TIQUETE}
+y \texttt{ESTADO\_GUIA}) documentados en la Sección \ref{sec:diagramas-estados}, antes de mostrar
+las tablas de roles ya vistas en la Sección 2. Los nombres y el orden de los estados en este
+stepper son literalmente los mismos que en los diagramas de estados (verificado 1:1 contra los
+archivos \texttt{.puml}); las transiciones \emph{ejecutables} (los botones ``$\rightarrow$ ESTADO'' que sí
+cambian el estado real de una guía o tiquete) viven en los módulos de Tiquetes y Mensajería, no en
+esta pestaña.
 
 \begin{figure}[h!]
   \centering
@@ -534,12 +550,22 @@ simulado, coherente con RF04 (factura debe emitir CUFE) y con la postcondición 
   \centering
   \includegraphics[width=0.92\linewidth]{capturas/gui-04-tiquetes-mapa-asientos.png}
   \caption{Módulo de Tiquetes --- mapa de asientos interactivo (RF01, RF03)}
+  \label{fig:gui-mapa-asientos}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.62\linewidth]{capturas/gui-07-rf03-bloqueo-temporal.png}
+  \caption{Evidencia puntual de RF03: al seleccionar la silla 1 se activa el temporizador
+  regresivo de bloqueo temporal (\texttt{03:00 min}, cuenta en tiempo real cada segundo)}
+  \label{fig:gui-rf03-timer}
 \end{figure}
 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.75\linewidth]{capturas/gui-05-boleto-impreso.png}
   \caption{Pase de abordaje electrónico generado al confirmar la venta (RF04)}
+  \label{fig:gui-boleto}
 \end{figure}
 
 \clearpage
@@ -554,7 +580,41 @@ dinámica del flete (tarifa base por kg, recargo por categoría y total) coheren
   \centering
   \includegraphics[width=0.82\linewidth]{capturas/gui-06-mensajeria-cubicaje.png}
   \caption{Módulo de Mensajería --- cubicaje, alerta de sobrepeso y liquidación de flete (RF05)}
+  \label{fig:gui-mensajeria}
 \end{figure}
+
+\clearpage
+\subsection{Matriz de verificación: documentación vs. GUI real}
+\label{sec:matriz-verificacion-gui}
+
+Para no ``vender humo'', cada afirmación hecha en esta sección se contrastó directamente contra el
+código fuente de \texttt{frontend/src/} (no solo contra lo que se ve en una captura) antes de
+publicarse aquí. La tabla siguiente resume ese contraste, con estado \textbf{Cumple} (el código
+hace exactamente lo que se documenta), \textbf{Cumple parcial} (existe pero con un alcance menor al
+sugerido) o \textbf{Simulado} (existe visualmente pero no es una integración real, y así se declara
+en el propio texto/código):
+
+{\small\rowcolors{2}{tablestripe}{white}
+\begin{longtable}{L{2.6cm} L{5.2cm} L{4.0cm} L{1.6cm}}
+\toprule
+\rowcolor{tablehead}\textbf{Requisito} & \textbf{Afirmación en el informe} & \textbf{Verificado en} & \textbf{Estado} \\
+\midrule
+\endhead
+RF01 / RF03 & Mapa de asientos por piso (VIP Cama / Confort), distingue libre/ocupada, bloqueo temporal de 3 min & \texttt{SeatMap.tsx} (estado \texttt{tiempoRestante}, 180 s reales por \texttt{setInterval}); Fig.~\ref{fig:gui-mapa-asientos} (mapa) y Fig.~\ref{fig:gui-rf03-timer} (temporizador activo, silla 1) & Cumple \\
+RF04 & Pase de abordaje con código QR y CUFE simulado al confirmar la venta & \texttt{TiquetesModule.tsx} (modal \texttt{tiqueteBoleto}); Fig.~\ref{fig:gui-boleto} --- el ícono QR es decorativo (no codifica datos reales) y el CUFE se declara ``simulado'' en el propio texto de la GUI, tal como aquí & Cumple (con simulación declarada) \\
+RF05 & Cubicaje calcula peso volumétrico en tiempo real, alerta de sobrepeso, liquidación dinámica de flete & \texttt{MensajeriaModule.tsx}: fórmula de peso volumétrico, componente \texttt{Alert} condicional y cálculo de tarifa, recargo y total; Fig.~\ref{fig:gui-mensajeria} & Cumple \\
+Estados \texttt{ESTADO\_TIQUETE} / \texttt{ESTADO\_GUIA} & Stepper visual con los mismos 5 estados de cada diagrama, en el mismo orden & \texttt{TrazabilidadTab.tsx} contra \texttt{estado-tiquete.puml} / \texttt{estado-guia-envio.puml} --- nombres y orden idénticos 1:1; las transiciones \texttt{SIGUIENTES\_ESTADOS} de \texttt{MensajeriaModule.tsx} replican exactamente las flechas del diagrama de \texttt{GuiaEnvio} & Cumple \\
+Trazabilidad --- KPIs & 4 KPIs en tiempo real (tiquetes, recaudo, guías, novedades) & \texttt{TrazabilidadTab.tsx}: calculados con funciones de arreglo estándar sobre el estado real de \texttt{DataContext}, no hardcodeados & Cumple \\
+RNF01 & Control de acceso por cargo & \texttt{Login.tsx} exige elegir 1 de los 3 roles y \texttt{DashboardLayout.tsx} exige sesión activa; pero \texttt{DashboardRouter.tsx} no filtra las 3 pestañas por rol --- un Cliente autenticado puede abrir el módulo de Mensajería del Operario y viceversa & Cumple parcial \\
+Home --- portal & Buscador de pasajes y rastreo de encomiendas & \texttt{Home.tsx} (tabs \texttt{pasajes}/\texttt{mensajeria}, \texttt{handleRastrearGuia}); Fig.~\ref{fig:gui-home} & Cumple \\
+\bottomrule
+\end{longtable}
+}
+
+La única brecha real encontrada en esta auditoría es RNF01: la GUI identifica y muestra el rol de
+cada usuario, pero no restringe todavía la visibilidad de los tres módulos según ese rol. Se deja
+documentado aquí en vez de corregir silenciosamente el texto para que coincidiera con la GUI, y se
+repite como pendiente explícito en la sección siguiente.
 
 \clearpage
 % ---------------------------------------------------------------------------
@@ -577,6 +637,12 @@ dinámica del flete (tarifa base por kg, recargo por categoría y total) coheren
   \texttt{frontend/} del repositorio, que ejecuta realmente ECU-01 y ECU-02 sobre datos de prueba en
   memoria. Ver capturas en la Sección \ref{sec:gui-implementada}, disponible para demostración en
   vivo durante la sustentación.
+  \item \textbf{Pendiente de GUI (RNF01):} la matriz de la Sección \ref{sec:matriz-verificacion-gui}
+  identificó que el workspace actual identifica el rol del usuario pero no restringe todavía qué
+  pestañas puede ver cada uno --- un Cliente autenticado puede hoy abrir el módulo de Mensajería del
+  Operario de Bodega, y viceversa. Corregirlo implicaría filtrar el arreglo \texttt{TABS} de
+  \texttt{DashboardRouter.tsx} según \texttt{usuario.rol}; se deja como mejora futura explícita en
+  vez de ampliar el alcance de este parcial sin haberlo verificado en código.
 \end{itemize}
 
 \end{document}
