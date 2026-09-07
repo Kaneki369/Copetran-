@@ -62,26 +62,30 @@ src/
   layouts/
     DashboardLayout.tsx       Shell: sidebar (logo + usuario + salir) + topbar + <Outlet />
   components/
-    Login.tsx                 Selector de rol: Cliente, Cajero de Agencia, Operario de Bodega
-    DashboardRouter.tsx        Monta el workspace de tabs (Tabs + los 3 paneles)
-    CompanyLogo.tsx             Caja de logo con fallback a ícono si la imagen no existe
+    Home.tsx                    Portal público de inicio (buscador de pasajes, rastreo de envíos)
+    Login.tsx                 Acceso al sistema: autentica por rol (Cliente, Cajero, Operario)
+    DashboardRouter.tsx        Monta el workspace de tabs (Tabs + los 3 paneles), tab vía ?tab=
+    CompanyLogo.tsx             Caja de logo (usa /public/assets/, con fallback a ícono)
     ui/                        Kit de UI genérico (Button, Input, Select, Modal/AlertDialog,
                                 Spinner/SpinnerOverlay/Skeleton, Tooltip, Tabs, Alert, Card, Badge)
                                 + index.ts (barril)
     workspace/
-      TrazabilidadTab.tsx        Roles, casos de uso y especificación ECU-01/ECU-02 en tablas
-      TiquetesModule.tsx          ECU-01 — mapa de asientos + flujo extendido de descuentos
-      SeatMap.tsx                  Mapa de asientos interactivo con CSS Grid
-      MensajeriaModule.tsx        ECU-02 — cubicaje + alerta dinámica de sobrepeso
+      TrazabilidadTab.tsx        KPIs en tiempo real + ciclos de vida parametrizados + roles/casos
+                                  de uso/especificación ECU-01/ECU-02 en tablas
+      TiquetesModule.tsx          ECU-01 — mapa de asientos + descuentos + pase de abordaje con QR
+      SeatMap.tsx                  Mapa de asientos interactivo (bus doble piso, CSS Grid)
+      MensajeriaModule.tsx        ECU-02 — cubicaje + alerta de sobrepeso + liquidación de flete
 ```
 
 ## Routing
 
 `react-router-dom` con `BrowserRouter` en `main.tsx`:
 
-- `/` y `/login` → `Login` (autentica contra `AuthContext` y navega a `/dashboard`).
+- `/` → `Home` (portal público: buscador de pasajes y rastreo de encomiendas, sin autenticar).
+- `/login` → `Login` (autentica contra `AuthContext` y navega a `/dashboard`).
 - `/dashboard` → `DashboardLayout` (guardia: redirige a `/login` si no hay usuario autenticado)
   con ruta índice → `DashboardRouter`, que monta el workspace de tabs dentro del `<Outlet />`.
+  El tab activo es controlable por URL (`/dashboard?tab=tiquetes`, `?tab=mensajeria`).
 
 ## Workspace (tabs) y flujos implementados
 
@@ -90,13 +94,17 @@ cualquier rol autenticado:
 
 | Tab | Componente | Contenido |
 |---|---|---|
-| Trazabilidad del Sistema | `TrazabilidadTab` | Roles, casos de uso de alto nivel y especificación completa de ECU-01/ECU-02, en tablas — mismo contenido que `docs/parcial-primer-corte/01`, `02` y `05` |
-| Módulo de Tiquetes (ECU-01) | `TiquetesModule` | Autoservicio (rol Cliente, canal WEB/APP) o venta en taquilla (otros roles): `TIQUETE`, `VIAJE_PROGRAMADO`, `FACTURA`, `SILLA` (mapa interactivo), 5 estados de `ESTADO_TIQUETE`, + código de descuento |
-| Módulo de Mensajería (ECU-02) | `MensajeriaModule` | `GUIA_ENVIO`, `REMESA`, 5 estados de `ESTADO_GUIA`, 4 categorías de `CATEGORIA_MERCANCIA`, + cubicaje con alerta de sobrepeso volumétrico |
+| Trazabilidad del Sistema | `TrazabilidadTab` | KPIs en tiempo real (tiquetes emitidos, recaudo, guías, novedades) + visualización interactiva de `ESTADO_TIQUETE`/`ESTADO_GUIA` + roles, casos de uso y especificación de ECU-01/ECU-02 en tablas — mismo contenido que `docs/parcial-primer-corte/01`, `02` y `05` |
+| Módulo de Tiquetes (ECU-01) | `TiquetesModule` | Autoservicio (rol Cliente, canal WEB/APP) o venta en taquilla (otros roles): `TIQUETE`, `VIAJE_PROGRAMADO`, `FACTURA`, `SILLA` (mapa interactivo bus doble piso), 5 estados de `ESTADO_TIQUETE`, código de descuento, y pase de abordaje electrónico con QR/CUFE simulado + impresión (`window.print()`) |
+| Módulo de Mensajería (ECU-02) | `MensajeriaModule` | `GUIA_ENVIO`, `REMESA`, 5 estados de `ESTADO_GUIA`, 4 categorías de `CATEGORIA_MERCANCIA`, cubicaje con alerta de sobrepeso volumétrico y panel de liquidación dinámica de flete |
 
 Las transiciones de estado (`RESERVADO → PAGADO → …`, `ADMITIDO → EN_TRANSITO → …`) están restringidas en
 `DataContext` exactamente a las flechas de los diagramas de estados ya entregados en
 `docs/parcial-primer-corte/diagramas/estados/`.
+
+Capturas reales de estas pantallas están incluidas en el informe PDF:
+[`docs/parcial-primer-corte/informe-parcial-primer-corte.pdf`](../docs/parcial-primer-corte/informe-parcial-primer-corte.pdf),
+Sección 11 "Interfaz Gráfica Implementada (GUI)".
 
 ### Convenciones de UI que no vienen del brief
 
@@ -118,9 +126,9 @@ negocio (tarifa por kg, penalidad de reprogramación, vigencia de tiquete abiert
 demostración porque el brief exige que existan como campos parametrizables pero no fija su valor exacto;
 están señalados con comentarios `// Nota:` en `DataContext.tsx`.
 
-## Logo de la empresa
+## Logo e identidad de marca
 
-El sidebar busca `/assets/logo-copetran.png` (carpeta `public/assets/`, que no existe todavía en el
-repo). Mientras no se agregue esa imagen, `CompanyLogo.tsx` degrada automáticamente a un ícono de
-bus sobre fondo oscuro — no hace falta ningún cambio de código para activar el logo real, solo
-colocar el archivo en `frontend/public/assets/logo-copetran.png`.
+Los assets reales ya están en `public/assets/` (`copetran-square.png`, `copetran-horizontal.png`,
+`logo-copetran.png`, y `public/favicon.png`). `CompanyLogo.tsx` los usa directamente; si alguno
+llegara a faltar, degrada automáticamente a un ícono de bus sobre fondo oscuro en vez de romper el
+layout.

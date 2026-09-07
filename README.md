@@ -19,7 +19,7 @@ Docente: José Marcial Téllez Gómez
 
 ### Parcial primer corte (vence 7 de septiembre de 2026)
 
-- 📄 **[Informe PDF completo](docs/parcial-primer-corte/informe-parcial-primer-corte.pdf)** — los 9 componentes de la consigna en un solo documento listo para entregar
+- 📄 **[Informe PDF completo](docs/parcial-primer-corte/informe-parcial-primer-corte.pdf)** — los 9 componentes de la consigna + capturas reales de la GUI implementada (Sección 11), 24 páginas, listo para entregar
 - [Brief completo](docs/parcial-primer-corte/00-brief.md)
 - [1. Roles y actores del sistema](docs/parcial-primer-corte/01-roles-actores.md)
 - [2. Casos de uso de alto nivel (por rol)](docs/parcial-primer-corte/02-casos-de-uso-alto-nivel.md)
@@ -49,12 +49,14 @@ Docente: José Marcial Téllez Gómez
 - [Script SQL corregido (schema real, T-SQL)](docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
 - [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md)
 
-### Interfaz funcional (scaffold)
+### Interfaz funcional
 
-[`frontend/`](frontend/) — React + TypeScript + Vite + TailwindCSS, con login por rol (Cliente, Cajero de
-Agencia, Operario de Bodega) y dashboards que implementan ECU-01 (Comprar/Vender Tiquete) y ECU-02
-(Admitir y Consolidar Guía de Envío) sobre datos mock en memoria. Ver [`frontend/README.md`](frontend/README.md)
-para cómo correrlo.
+[`frontend/`](frontend/) — React + TypeScript + Vite + TailwindCSS. Portal público de inicio
+(buscador de pasajes, rastreo de envíos), acceso por rol (Cliente, Cajero de Agencia, Operario de
+Bodega) y workspace con KPIs en tiempo real, ECU-01 (mapa de asientos + pase de abordaje con QR) y
+ECU-02 (cubicaje + liquidación de flete), sobre datos mock en memoria. Ver
+[`frontend/README.md`](frontend/README.md) para cómo correrlo, o las capturas en la Sección 11 del
+informe PDF de arriba.
 
 ### CR-1 T-2 — Formulación de Proyecto
 

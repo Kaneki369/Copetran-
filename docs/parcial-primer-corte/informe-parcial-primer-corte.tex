@@ -477,6 +477,87 @@ aproximar un diagrama de colaboración).
 
 \clearpage
 % ---------------------------------------------------------------------------
+\section{Interfaz Gráfica Implementada (GUI)}
+\label{sec:gui-implementada}
+% ---------------------------------------------------------------------------
+
+Como complemento --- fuera del alcance estricto de los 9 componentes exigidos por la consigna ---
+el equipo implementó un escafolding funcional de la interfaz de usuario (React + TypeScript + Vite
++ TailwindCSS, carpeta \texttt{frontend/} del repositorio) que ejecuta realmente los flujos de
+ECU-01 y ECU-02 sobre datos de prueba en memoria. A continuación se muestran capturas reales de la
+aplicación en ejecución, como evidencia de que el diseño documentado en las secciones anteriores se
+llevó a una interfaz funcional y no se quedó solo en el papel.
+
+\subsection{Portal de inicio y acceso al sistema}
+
+La pantalla de inicio (\texttt{/}) presenta el buscador de pasajes y el rastreo de encomiendas de
+cara al cliente externo; el acceso al workspace operativo (\texttt{/login}) autentica por rol,
+coherente con RNF01 (control de acceso por cargo) y con los tres roles definidos en la Sección 1:
+Cliente, Cajero de Agencia y Operario de Bodega.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.92\linewidth]{capturas/gui-01-home.png}
+  \caption{Portal de inicio --- buscador de pasajes y rastreo de encomiendas}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.92\linewidth]{capturas/gui-02-login.png}
+  \caption{Acceso al sistema --- autenticación por rol (RNF01)}
+\end{figure}
+
+\clearpage
+\subsection{Trazabilidad del sistema y KPIs operativos}
+
+La primera pestaña del workspace no es solo una vista de solo lectura de la documentación: incluye
+KPIs calculados en tiempo real sobre los datos de prueba (tiquetes emitidos, recaudo estimado,
+guías de envío, guías con novedad) y una visualización interactiva de los dos diagramas de estados
+parametrizados (\texttt{ESTADO\_TIQUETE} y \texttt{ESTADO\_GUIA}), antes de mostrar las tablas de
+roles ya vistas en la Sección 2.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.92\linewidth]{capturas/gui-03-trazabilidad-kpis.png}
+  \caption{Pestaña "Trazabilidad del Sistema" --- KPIs y ciclos de vida parametrizados}
+\end{figure}
+
+\clearpage
+\subsection{Módulo de Tiquetes (ECU-01)}
+
+El mapa de asientos interactivo distingue piso VIP Cama / Confort, marca sillas ocupadas frente a
+disponibles y aplica el bloqueo temporal de RF03 (temporizador de 3 minutos) al seleccionar una
+silla. Al confirmar la venta se genera un pase de abordaje electrónico con código QR y CUFE
+simulado, coherente con RF04 (factura debe emitir CUFE) y con la postcondición de ECU-01.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.92\linewidth]{capturas/gui-04-tiquetes-mapa-asientos.png}
+  \caption{Módulo de Tiquetes --- mapa de asientos interactivo (RF01, RF03)}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.75\linewidth]{capturas/gui-05-boleto-impreso.png}
+  \caption{Pase de abordaje electrónico generado al confirmar la venta (RF04)}
+\end{figure}
+
+\clearpage
+\subsection{Módulo de Mensajería (ECU-02)}
+
+El formulario de cubicaje calcula el peso volumétrico en tiempo real a partir de las dimensiones
+del paquete y muestra la alerta de sobrepeso cuando corresponde, junto con una liquidación
+dinámica del flete (tarifa base por kg, recargo por categoría y total) coherente con RF05
+(cálculo automático de valor según peso/categoría).
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.82\linewidth]{capturas/gui-06-mensajeria-cubicaje.png}
+  \caption{Módulo de Mensajería --- cubicaje, alerta de sobrepeso y liquidación de flete (RF05)}
+\end{figure}
+
+\clearpage
+% ---------------------------------------------------------------------------
 \section{Notas de Trazabilidad y Pendientes}
 % ---------------------------------------------------------------------------
 
@@ -492,9 +573,10 @@ aproximar un diagrama de colaboración).
   (\path{cr1_t2_formulacion_proyecto.tex}); no lo reemplazan ni se fusionan con ese archivo salvo
   que el equipo decida lo contrario más adelante.
   \item Como complemento --- fuera del alcance estricto de esta consigna --- el equipo desarrolló
-  también un escafolding funcional de la interfaz de usuario (React + TypeScript + Vite +
-  TailwindCSS) en la carpeta \texttt{frontend/} del repositorio, implementando ECU-01 y ECU-02
-  sobre datos de prueba en memoria, disponible para demostración en la sustentación.
+  también una interfaz de usuario funcional (React + TypeScript + Vite + TailwindCSS) en la carpeta
+  \texttt{frontend/} del repositorio, que ejecuta realmente ECU-01 y ECU-02 sobre datos de prueba en
+  memoria. Ver capturas en la Sección \ref{sec:gui-implementada}, disponible para demostración en
+  vivo durante la sustentación.
 \end{itemize}
 
 \end{document}
