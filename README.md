@@ -46,8 +46,8 @@ Docente: José Marcial Téllez Gómez
 
 **Fuentes de trazabilidad** (`docs/parcial-primer-corte/fuentes/`):
 
-- [Script SQL corregido (schema real, T-SQL)](docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
-- [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md)
+- [Script SQL corregido (schema real, T-SQL)](docs/parcial-primer-corte/fuentes/copetran_corregido.sql).
+- [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md).
 
 ### Interfaz funcional
 
