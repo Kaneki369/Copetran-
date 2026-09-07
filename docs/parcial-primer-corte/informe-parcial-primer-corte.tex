@@ -406,15 +406,6 @@ Se modelan los tres estados/ciclos de vida más ricos del sistema, correspondien
 sirve como insumo de diseño para parametrizar el campo \texttt{estado\_viaje} en
 \texttt{MULTITABLA\_PARAMETRO} en una futura iteración.
 
-\textbf{Aporte propio de este parcial:} a diferencia de los diagramas de estados de \texttt{Tiquete}
-(\texttt{ESTADO_TIQUETE}) y \texttt{GuiaEnvio} (\texttt{ESTADO_GUIA}), que solo grafican estados que
-\textbf{ya existen} parametrizados en \texttt{MULTITABLA_PARAMETRO} del modelo relacional del CR-1
-T-2, el diagrama de \texttt{ViajeProgramado} es el \textbf{único de los tres} que formaliza un ciclo
-de vida que \textbf{todavía no está representado} en la base de datos (el campo sigue siendo texto
-libre). Es decir, este diagrama no documenta un estado existente sino que \textbf{propone} uno ---
-vale la pena mencionarlo explícitamente en la sustentación oral para que quede claro que es un
-aporte de diseño de este parcial y no una simple transcripción del modelo ya construido.
-
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.5\linewidth]{diagramas/estados/estado_viaje_programado.png}
@@ -573,48 +564,26 @@ dinámica del flete (tarifa base por kg, recargo por categoría y total) coheren
 \subsection{Matriz de verificación: documentación vs. GUI real}
 \label{sec:matriz-verificacion-gui}
 
-Cada afirmación hecha en esta sección se contrastó directamente contra el código fuente de
-\texttt{frontend/src/} (no solo contra lo que se ve en una captura) antes de publicarse aquí. La
-tabla siguiente resume esa trazabilidad punto por punto:
+Cada afirmación hecha en esta sección se contrastó directamente contra el código fuente real (no
+solo contra lo que se ve en una captura) antes de publicarse aquí. La tabla siguiente resume esa
+trazabilidad punto por punto:
 
 {\small\rowcolors{2}{tablestripe}{white}
-\begin{longtable}{L{2.9cm} L{5.6cm} L{6.0cm}}
+\begin{longtable}{L{3.7cm} L{4.9cm} L{5.9cm}}
 \toprule
 \rowcolor{tablehead}\textbf{Requisito} & \textbf{Afirmación en el informe} & \textbf{Verificado en} \\
 \midrule
 \endhead
-RF01 / RF03 & Mapa de asientos por piso (VIP Cama / Confort), distingue libre/ocupada, bloqueo temporal de 3 min & \texttt{SeatMap.tsx} (estado \texttt{tiempoRestante}, 180 s reales por \texttt{setInterval}); Fig.~\ref{fig:gui-mapa-asientos} (mapa) y Fig.~\ref{fig:gui-rf03-timer} (temporizador activo, silla 1) \\
-RF04 & Pase de abordaje con código QR y CUFE simulado al confirmar la venta & \texttt{TiquetesModule.tsx} (modal \texttt{tiqueteBoleto}); Fig.~\ref{fig:gui-boleto}, coherente con la simulación declarada en el propio texto de la GUI \\
-RF05 & Cubicaje calcula peso volumétrico en tiempo real, alerta de sobrepeso, liquidación dinámica de flete & \texttt{MensajeriaModule.tsx}: fórmula de peso volumétrico, componente \texttt{Alert} condicional y cálculo de tarifa, recargo y total; Fig.~\ref{fig:gui-mensajeria} \\
-Estados \texttt{ESTADO\_TIQUETE} / \texttt{ESTADO\_GUIA} & Stepper visual con los mismos 5 estados de cada diagrama, en el mismo orden & \texttt{TrazabilidadTab.tsx} contra \texttt{estado-tiquete.puml} / \texttt{estado-guia-envio.puml} --- nombres y orden idénticos 1:1; las transiciones \texttt{SIGUIENTES\_ESTADOS} de \texttt{MensajeriaModule.tsx} replican exactamente las flechas del diagrama de \texttt{GuiaEnvio} \\
-Trazabilidad --- KPIs & 4 KPIs en tiempo real (tiquetes, recaudo, guías, novedades) & \texttt{TrazabilidadTab.tsx}: calculados con funciones de arreglo estándar sobre el estado real de \texttt{DataContext}, no hardcodeados \\
-RNF01 & Acceso al workspace operativo identificado por rol & \texttt{Login.tsx} exige elegir 1 de los 3 roles y \texttt{DashboardLayout.tsx} exige sesión activa; el rol queda visible durante toda la sesión (Fig.~\ref{fig:gui-login}) \\
-Home --- portal & Buscador de pasajes y rastreo de encomiendas & \texttt{Home.tsx} (tabs \texttt{pasajes}/\texttt{mensajeria}, \texttt{handleRastrearGuia}); Fig.~\ref{fig:gui-home} \\
+\textbf{RF01} --- un tiquete por silla por viaje & Mapa de asientos por piso (VIP Cama / Confort), distingue libre/ocupada & \texttt{SeatMap.tsx}; Fig.~\ref{fig:gui-mapa-asientos} \\
+\textbf{RF03} --- bloqueo temporal de silla & Temporizador de 3 minutos al seleccionar una silla & \texttt{SeatMap.tsx} (estado \texttt{tiempoRestante}, 180 s reales por \texttt{setInterval}); Fig.~\ref{fig:gui-rf03-timer} (temporizador activo, silla 1) \\
+\textbf{RF04} --- factura debe emitir CUFE & Pase de abordaje con código QR y CUFE simulado al confirmar la venta & \texttt{TiquetesModule.tsx} (modal \texttt{tiqueteBoleto}); Fig.~\ref{fig:gui-boleto}, coherente con la simulación declarada en el propio texto de la GUI \\
+\textbf{RF05} --- cálculo automático de valor según peso/categoría & Cubicaje calcula peso volumétrico en tiempo real, alerta de sobrepeso, liquidación dinámica de flete & \texttt{MensajeriaModule.tsx}: fórmula de peso volumétrico, componente \texttt{Alert} condicional y cálculo de tarifa, recargo y total; Fig.~\ref{fig:gui-mensajeria} \\
+Estados de \texttt{Tiquete} y \texttt{GuiaEnvio} & Stepper visual con los mismos 5 estados de cada diagrama, en el mismo orden & \texttt{TrazabilidadTab.tsx} contra \texttt{estado-tiquete.puml} / \texttt{estado-guia-envio.puml} --- nombres y orden idénticos 1:1; las transiciones \texttt{SIGUIENTES\_ESTADOS} de \texttt{MensajeriaModule.tsx} replican exactamente las flechas del diagrama de \texttt{GuiaEnvio} \\
+Trazabilidad --- KPIs operativos & 4 KPIs en tiempo real (tiquetes, recaudo, guías, novedades) & \texttt{TrazabilidadTab.tsx}: calculados con funciones de arreglo estándar sobre el estado real de \texttt{DataContext}, no hardcodeados \\
+\textbf{RNF01} --- control de acceso por cargo & Acceso al workspace operativo identificado por rol & \texttt{Login.tsx} exige elegir 1 de los 3 roles y \texttt{DashboardLayout.tsx} exige sesión activa; el rol queda visible durante toda la sesión (Fig.~\ref{fig:gui-login}) \\
+Home --- portal de inicio & Buscador de pasajes y rastreo de encomiendas & \texttt{Home.tsx} (tabs \texttt{pasajes}/\texttt{mensajeria}, \texttt{handleRastrearGuia}); Fig.~\ref{fig:gui-home} \\
 \bottomrule
 \end{longtable}
 }
-
-\clearpage
-% ---------------------------------------------------------------------------
-\section{Notas de Trazabilidad}
-% ---------------------------------------------------------------------------
-
-\begin{itemize}
-  \item El diagrama de estados de \texttt{ViajeProgramado} formaliza el ciclo de vida completo de
-  un viaje (\texttt{PROGRAMADO} $\rightarrow$ \texttt{EN\_ALISTAMIENTO} $\rightarrow$
-  \texttt{EN\_CURSO} $\rightarrow$ \texttt{FINALIZADO}/\texttt{CANCELADO}), consistente con el
-  Proceso B del CR-1 T-2 --- se documenta explícitamente como aporte de diseño de este parcial.
-  \item El diagrama de clases DAO incorpora \texttt{recalcularTotales()} en
-  \texttt{RemesaDAO}/\texttt{Remesa} como método de negocio explícito, coherente con RF17
-  (mantenimiento de totales consistentes de la remesa a partir de sus guías asociadas).
-  \item Este documento y sus diagramas son un entregable \textbf{aparte} del CR-1 T-2
-  (\path{cr1_t2_formulacion_proyecto.tex}); no lo reemplazan ni se fusionan con ese archivo salvo
-  que el equipo decida lo contrario más adelante.
-  \item Como complemento --- fuera del alcance estricto de esta consigna --- el equipo desarrolló
-  también una interfaz de usuario funcional (React + TypeScript + Vite + TailwindCSS) en la carpeta
-  \texttt{frontend/} del repositorio, que ejecuta realmente ECU-01 y ECU-02 sobre datos de prueba en
-  memoria. Ver capturas y matriz de trazabilidad en la Sección \ref{sec:gui-implementada},
-  disponible para demostración en vivo durante la sustentación.
-\end{itemize}
 
 \end{document}
