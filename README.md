@@ -19,7 +19,7 @@ Docente: José Marcial Téllez Gómez
 
 ### Parcial primer corte (vence 7 de septiembre de 2026)
 
-- 📄 **[Informe PDF completo](docs/parcial-primer-corte/informe-parcial-primer-corte.pdf)** — los 9 componentes de la consigna + capturas reales de la GUI implementada (Sección 11), 24 páginas, listo para entregar
+- 📄 **[Informe PDF completo](docs/parcial-primer-corte/informe-parcial-primer-corte.pdf)** — los 9 componentes de la consigna + capturas reales de la GUI implementada (Sección 11), 24 páginas, listo para entregar.
 - [Brief completo](docs/parcial-primer-corte/00-brief.md)
 - [1. Roles y actores del sistema](docs/parcial-primer-corte/01-roles-actores.md)
 - [2. Casos de uso de alto nivel (por rol)](docs/parcial-primer-corte/02-casos-de-uso-alto-nivel.md)
@@ -47,7 +47,7 @@ Docente: José Marcial Téllez Gómez
 **Fuentes de trazabilidad** (`docs/parcial-primer-corte/fuentes/`):
 
 - [Script SQL corregido (schema real, T-SQL)](docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
-- [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md)
+- [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md.
 
 ### Interfaz funcional
 
