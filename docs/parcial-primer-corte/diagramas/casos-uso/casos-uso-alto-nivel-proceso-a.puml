@@ -27,6 +27,6 @@ Cajero -- UC6
 Cajero -- UC3
 Auxiliar -- UC7
 
-UC1 ..> Pagos : notifica
-UC5 ..> Pagos : notifica
+UC1 -- Pagos : notifica
+UC5 -- Pagos : notifica
 @enduml

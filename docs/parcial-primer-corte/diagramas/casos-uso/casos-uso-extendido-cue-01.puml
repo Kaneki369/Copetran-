@@ -19,8 +19,8 @@ rectangle "CUE-01" {
 
 Cajero -- Base
 Cliente -- Base
-Auxiliar -- Ext3
-Base ..> Pagos : notifica
+Auxiliar -- Base
+Base -- Pagos : notifica
 
 Base ..> Inc1 : <<include>>
 Base ..> Inc2 : <<include>>

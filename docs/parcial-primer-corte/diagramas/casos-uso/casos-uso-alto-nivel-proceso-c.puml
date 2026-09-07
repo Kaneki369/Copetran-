@@ -26,5 +26,5 @@ Operario -- UC5
 Operario -- UC6
 Conductor -- UC7
 
-UC3 ..> DIAN : notifica CUFE
+UC3 -- DIAN : notifica CUFE
 @enduml

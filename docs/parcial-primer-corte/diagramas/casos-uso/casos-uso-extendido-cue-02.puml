@@ -18,7 +18,7 @@ rectangle "CUE-02" {
 
 Operario -- Base
 Remitente -- Base
-Base ..> Facturacion : notifica
+Base -- Facturacion : notifica
 
 Base ..> Inc1 : <<include>>
 Base ..> Inc2 : <<include>>
