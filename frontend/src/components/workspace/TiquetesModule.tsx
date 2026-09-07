@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { useLocalStorage } from '@/hooks';
+import { clientesSeed } from '@/data/mockData';
 import type { CanalVenta, Cliente, MetodoPago, Tiquete } from '@/types/copetran';
 import { AlertDialog, Badge, Button, Card, CardTitle, Input, Modal, Select } from '@/components/ui';
 import { SeatMap } from './SeatMap';
@@ -34,11 +36,19 @@ export function TiquetesModule() {
 
   const esCliente = usuario?.rol === 'CLIENTE';
 
-  const [clienteActual, setClienteActual] = useLocalStorage<Cliente | null>('copetran.clienteActual', null);
+  const [clienteActual, setClienteActual] = useLocalStorage<Cliente | null>('copetran.clienteActual', clientesSeed[0]);
   const [idClienteSeleccionado, setIdClienteSeleccionado] = useState<number | ''>('');
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
 
-  const [idViaje, setIdViaje] = useState<number | null>(null);
+  const [searchParams] = useSearchParams();
+  const viajeUrlParam = searchParams.get('viaje');
+  const [idViaje, setIdViaje] = useState<number | null>(() => {
+    if (viajeUrlParam) {
+      const parsed = Number(viajeUrlParam);
+      if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+    }
+    return null;
+  });
   const [idSilla, setIdSilla] = useState<number | null>(null);
   const [canal, setCanal] = useState<CanalVenta>(esCliente ? 'WEB' : 'TAQUILLA');
   const [metodoPago, setMetodoPago] = useState<MetodoPago>('TARJETA_CREDITO');
@@ -159,7 +169,7 @@ export function TiquetesModule() {
           {idPasajero && (
             <Card>
               <CardTitle>{esCliente ? '1' : '2'}. Consultar disponibilidad de viaje</CardTitle>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 max-h-72 overflow-y-auto pr-1">
                 {viajes.map((v) => (
                   <button
                     key={v.id_viaje}

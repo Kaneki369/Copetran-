@@ -9,6 +9,7 @@ import {
   MapPin,
   Calendar,
   ArrowRight,
+  ArrowLeftRight,
   Search,
   Users,
   PhoneCall,
@@ -29,28 +30,66 @@ import { useData } from '@/context/DataContext';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { cn } from '@/utils/cn';
 
+const CIUDADES_COPETRAN = [
+  { id: 'Bucaramanga', nombre: 'Bucaramanga (Sede Principal)' },
+  { id: 'Bogotá', nombre: 'Bogotá D.C. (Terminal Salitre)' },
+  { id: 'Medellín', nombre: 'Medellín (Terminal del Norte)' },
+  { id: 'Cúcuta', nombre: 'Cúcuta (Terminal Central)' },
+  { id: 'Santa Marta', nombre: 'Santa Marta (Terminal Rodoviario)' },
+  { id: 'Cartagena', nombre: 'Cartagena (Terminal de Transportes)' },
+];
+
 export function Home() {
   const navigate = useNavigate();
   const { usuario, login } = useAuth();
-  const { viajes, guias } = useData();
+  const { guias, buscarOProgramarViajes } = useData();
+
+  // Fecha mínima permitida (día actual en formato YYYY-MM-DD en hora local)
+  const fechaHoy = (() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  })();
 
   // Estado del widget de búsqueda del Hero
   const [activeTab, setActiveTab] = useState<'pasajes' | 'mensajeria'>('pasajes');
   const [origen, setOrigen] = useState('Bucaramanga');
   const [destino, setDestino] = useState('Bogotá');
-  const [fechaViaje, setFechaViaje] = useState('2026-09-08');
+  const [fechaViaje, setFechaViaje] = useState(fechaHoy);
   const [numGuiaBuscar, setNumGuiaBuscar] = useState('');
   const [guiaResultado, setGuiaResultado] = useState<typeof guias[0] | null | 'no_encontrada'>(null);
-  const [viajesFiltrados, setViajesFiltrados] = useState<typeof viajes | null>(null);
+  const [viajesFiltrados, setViajesFiltrados] = useState<ReturnType<typeof buscarOProgramarViajes> | null>(null);
+
+  // Cambio de origen con ajuste automático de destino para evitar origen === destino
+  function handleCambiarOrigen(nuevoOrigen: string) {
+    setOrigen(nuevoOrigen);
+    if (destino === nuevoOrigen) {
+      const alternativa = CIUDADES_COPETRAN.find((c) => c.id !== nuevoOrigen)?.id ?? 'Bogotá';
+      setDestino(alternativa);
+    }
+  }
+
+  // Intercambiar ciudades (origen <-> destino)
+  function handleIntercambiarCiudades() {
+    const temp = origen;
+    setOrigen(destino);
+    setDestino(temp);
+  }
 
   // Buscar viajes disponibles
-  function handleBuscarViajes(e: React.FormEvent) {
-    e.preventDefault();
-    const resultados = viajes.filter(
-      (v) =>
-        (!origen || v.origen_ciudad.toLowerCase().includes(origen.toLowerCase())) &&
-        (!destino || v.destino_ciudad.toLowerCase().includes(destino.toLowerCase())),
-    );
+  function handleBuscarViajes(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (origen === destino) {
+      setViajesFiltrados([]);
+      return;
+    }
+    const fechaAUsar = fechaViaje < fechaHoy ? fechaHoy : fechaViaje;
+    if (fechaViaje < fechaHoy) {
+      setFechaViaje(fechaHoy);
+    }
+    const resultados = buscarOProgramarViajes(origen, destino, fechaAUsar);
     setViajesFiltrados(resultados);
   }
 
@@ -72,12 +111,46 @@ export function Home() {
     }
   }
 
-  // Comprar tiquete rápido: asigna rol de Cliente si no hay sesión y abre el módulo de compra
-  function handleComprarTiquete(_idViaje?: number) {
+  // Comprar tiquete rápido: asigna sesión de Cliente y abre el módulo de compra con el viaje preseleccionado
+  function handleComprarTiquete(idViaje?: number) {
     if (!usuario) {
-      login({ nombre: 'Pasajero Copetran', rol: 'CLIENTE' });
+      login({ nombre: 'Laura Gómez Rey', rol: 'CLIENTE' });
     }
-    navigate('/dashboard');
+    try {
+      const guardado = window.localStorage.getItem('copetran.clienteActual');
+      if (!guardado) {
+        window.localStorage.setItem(
+          'copetran.clienteActual',
+          JSON.stringify({
+            id_cliente: 1,
+            documento: '1098765432',
+            nombres: 'Laura',
+            apellidos: 'Gómez Rey',
+            celular: '3011234567',
+          }),
+        );
+      }
+    } catch {
+      // ignore
+    }
+
+    if (idViaje) {
+      navigate(`/dashboard?tab=tiquetes&viaje=${idViaje}`);
+    } else {
+      navigate('/dashboard?tab=tiquetes');
+    }
+  }
+
+  // Seleccionar ruta popular directamente
+  function handleSeleccionarRutaRapida(orig: string, dest: string) {
+    setOrigen(orig);
+    setDestino(dest);
+    const resultados = buscarOProgramarViajes(orig, dest, fechaViaje);
+    setViajesFiltrados(resultados);
+    const widget = document.getElementById('widget-reserva');
+    if (widget) {
+      widget.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   const rutasDestacadas = [
@@ -91,6 +164,15 @@ export function Home() {
       popular: true,
     },
     {
+      origen: 'Bogotá',
+      destino: 'Medellín',
+      tiempo: '9h 15m',
+      frecuencia: 'Salidas mañana y tarde',
+      precio: 90000,
+      tipo: 'Bus Cama Confort',
+      popular: true,
+    },
+    {
       origen: 'Bucaramanga',
       destino: 'Medellín',
       tiempo: '7h 45m',
@@ -98,15 +180,6 @@ export function Home() {
       precio: 95000,
       tipo: 'Bus Cama Confort',
       popular: true,
-    },
-    {
-      origen: 'Bucaramanga',
-      destino: 'Cúcuta',
-      tiempo: '5h 00m',
-      frecuencia: 'Salidas cada hora',
-      precio: 45000,
-      tipo: 'Línea Platino',
-      popular: false,
     },
     {
       origen: 'Bucaramanga',
@@ -228,7 +301,7 @@ export function Home() {
           </div>
 
           {/* WIDGET INTERACTIVO DE BÚSQUEDA Y RASTREO */}
-          <div className="max-w-4xl mx-auto bg-white text-slate-900 rounded-3xl shadow-2xl shadow-blue-950/50 border border-slate-100 overflow-hidden">
+          <div id="widget-reserva" className="max-w-4xl mx-auto bg-white text-slate-900 rounded-3xl shadow-2xl shadow-blue-950/50 border border-slate-100 overflow-hidden">
             {/* Pestañas superiores */}
             <div className="flex border-b border-slate-200 bg-slate-50/80">
               <button
@@ -269,27 +342,41 @@ export function Home() {
             {/* Contenido pestaña: COMPRAR PASAJES */}
             {activeTab === 'pasajes' && (
               <div className="p-6 sm:p-8">
-                <form onSubmit={handleBuscarViajes} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <form onSubmit={handleBuscarViajes} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                   {/* Origen */}
-                  <div>
+                  <div className="lg:col-span-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
                       <MapPin className="h-3.5 w-3.5 text-copetran-600" />
                       Origen
                     </label>
                     <select
                       value={origen}
-                      onChange={(e) => setOrigen(e.target.value)}
+                      onChange={(e) => handleCambiarOrigen(e.target.value)}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-copetran-500 focus:ring-2 focus:ring-copetran-100 outline-none transition"
                     >
-                      <option value="Bucaramanga">Bucaramanga (Sede Principal)</option>
-                      <option value="Bogotá">Bogotá D.C. (Terminal Salitre)</option>
-                      <option value="Medellín">Medellín (Terminal del Norte)</option>
-                      <option value="Cúcuta">Cúcuta (Terminal Central)</option>
+                      {CIUDADES_COPETRAN.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nombre}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
-                  {/* Destino */}
-                  <div>
+                  {/* Botón intercambio de ciudades */}
+                  <div className="flex items-center justify-center lg:col-span-1 pb-1">
+                    <button
+                      type="button"
+                      onClick={handleIntercambiarCiudades}
+                      title="Intercambiar origen y destino"
+                      className="h-[42px] w-full lg:w-[42px] rounded-xl bg-slate-100 hover:bg-amber-100 text-slate-600 hover:text-amber-800 border border-slate-200 flex items-center justify-center shadow-sm transition hover:scale-105 active:scale-95 gap-1.5 text-xs font-semibold"
+                    >
+                      <ArrowLeftRight className="h-4 w-4 shrink-0 text-copetran-600" />
+                      <span className="lg:hidden">Invertir</span>
+                    </button>
+                  </div>
+
+                  {/* Destino (excluye origen actual) */}
+                  <div className="lg:col-span-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
                       <Navigation className="h-3.5 w-3.5 text-amber-500" />
                       Destino
@@ -299,31 +386,36 @@ export function Home() {
                       onChange={(e) => setDestino(e.target.value)}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-copetran-500 focus:ring-2 focus:ring-copetran-100 outline-none transition"
                     >
-                      <option value="Bogotá">Bogotá D.C.</option>
-                      <option value="Medellín">Medellín</option>
-                      <option value="Cúcuta">Cúcuta</option>
-                      <option value="Santa Marta">Santa Marta (Costa)</option>
-                      <option value="Cartagena">Cartagena</option>
-                      <option value="Bucaramanga">Bucaramanga</option>
+                      {CIUDADES_COPETRAN.filter((c) => c.id !== origen).map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nombre}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   {/* Fecha de Viaje */}
-                  <div>
+                  <div className="lg:col-span-3">
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-copetran-600" />
                       Fecha de salida
                     </label>
                     <input
                       type="date"
+                      min={fechaHoy}
                       value={fechaViaje}
-                      onChange={(e) => setFechaViaje(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (!val || val >= fechaHoy) {
+                          setFechaViaje(val || fechaHoy);
+                        }
+                      }}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-copetran-500 focus:ring-2 focus:ring-copetran-100 outline-none transition"
                     />
                   </div>
 
                   {/* Botón Buscar */}
-                  <div className="flex items-end">
+                  <div className="lg:col-span-2">
                     <button
                       type="submit"
                       className="w-full h-[42px] rounded-xl bg-copetran-600 hover:bg-copetran-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all transform active:scale-95"
@@ -587,9 +679,9 @@ export function Home() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleComprarTiquete()}
+                    onClick={() => handleSeleccionarRutaRapida(ruta.origen, ruta.destino)}
                     className="p-2.5 rounded-xl bg-copetran-50 hover:bg-copetran-600 text-copetran-600 hover:text-white transition-colors"
-                    title="Reservar tiquete"
+                    title="Consultar y reservar esta ruta"
                   >
                     <ArrowRight className="h-4 w-4" />
                   </button>

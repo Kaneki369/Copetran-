@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { ListChecks, Package, Ticket } from 'lucide-react';
 import { Tabs } from '@/components/ui';
 import type { TabItem } from '@/components/ui';
@@ -17,5 +18,7 @@ const TABS: TabItem[] = [
  * Se monta como ruta índice dentro de <DashboardLayout />.
  */
 export function DashboardRouter() {
-  return <Tabs tabs={TABS} defaultTabId="trazabilidad" />;
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') || 'trazabilidad';
+  return <Tabs tabs={TABS} defaultTabId={tabParam} key={tabParam} />;
 }

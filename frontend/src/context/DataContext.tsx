@@ -3,6 +3,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import {
   clientesSeed,
   facturasSeed,
+  generarSillas,
   guiasSeed,
   remesasSeed,
   sillasPorBus,
@@ -97,13 +98,14 @@ interface DataContextValue {
   consolidarEnRemesa: (idGuia: number, idRemesaExistente?: number) => void;
   cambiarEstadoGuia: (idGuia: number, nuevoEstado: EstadoGuia) => boolean;
   restablecerDatosSemilla: () => void;
+  buscarOProgramarViajes: (origen: string, destino: string, fecha: string) => ViajeProgramado[];
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [clientes, setClientes] = useLocalStorage<Cliente[]>('copetran.clientes', clientesSeed);
-  const [viajes] = useLocalStorage<ViajeProgramado[]>('copetran.viajes', viajesProgramadosSeed);
+  const [viajes, setViajes] = useLocalStorage<ViajeProgramado[]>('copetran.viajes_v3', viajesProgramadosSeed);
   const [tiquetes, setTiquetes] = useLocalStorage<Tiquete[]>('copetran.tiquetes', tiquetesSeed);
   const [facturas, setFacturas] = useLocalStorage<Factura[]>('copetran.facturas', facturasSeed);
   const [guias, setGuias] = useLocalStorage<GuiaEnvio[]>('copetran.guias', guiasSeed);
@@ -113,7 +115,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     (idViaje: number): SillaConEstado[] => {
       const viaje = viajes.find((v) => v.id_viaje === idViaje);
       if (!viaje) return [];
-      const todasLasSillas = sillasPorBus[viaje.id_bus] ?? [];
+      const todasLasSillas = sillasPorBus[viaje.id_bus] ?? generarSillas(viaje.id_bus);
       const ocupadas = new Set(
         tiquetes
           .filter(
@@ -318,13 +320,85 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [guias, setGuias],
   );
 
+  const buscarOProgramarViajes = useCallback(
+    (origen: string, destino: string, fecha: string): ViajeProgramado[] => {
+      const origLower = origen.trim().toLowerCase();
+      const destLower = destino.trim().toLowerCase();
+      if (!origLower || !destLower || origLower === destLower) return [];
+
+      // 1. Buscar si ya existen viajes en esa fecha exacta
+      const directos = viajes.filter(
+        (v) =>
+          v.origen_ciudad.toLowerCase() === origLower &&
+          v.destino_ciudad.toLowerCase() === destLower &&
+          v.fecha === fecha,
+      );
+      if (directos.length > 0) return directos;
+
+      // 2. Si existen viajes de esa ruta en otras fechas, adaptar sus horarios para la fecha solicitada
+      const viajesRuta = viajes.filter(
+        (v) =>
+          v.origen_ciudad.toLowerCase() === origLower &&
+          v.destino_ciudad.toLowerCase() === destLower,
+      );
+
+      const maxId = Math.max(0, ...viajes.map((v) => v.id_viaje));
+
+      if (viajesRuta.length > 0) {
+        // Obtener horarios únicos de esa ruta
+        const horariosVistos = new Set<string>();
+        const salidasRuta = viajesRuta.filter((v) => {
+          if (horariosVistos.has(v.hora_salida)) return false;
+          horariosVistos.add(v.hora_salida);
+          return true;
+        });
+
+        const nuevosViajes: ViajeProgramado[] = salidasRuta.map((base, idx) => ({
+          ...base,
+          id_viaje: maxId + idx + 1,
+          fecha: fecha,
+          estado_viaje: 'PROGRAMADO',
+        }));
+
+        setViajes((prev) => [...prev, ...nuevosViajes]);
+        return nuevosViajes;
+      }
+
+      // 3. Si es cualquier otra combinación intermunicipal válida de Copetran que no tenía registros,
+      // generamos automáticamente los itinerarios diarios oficiales de Copetran para esa fecha:
+      const horariosDefault = [
+        { hora: '07:30', bus: 3, placa: 'WRT-789', cond: 12 },
+        { hora: '14:30', bus: 4, placa: 'WRT-501', cond: 14 },
+        { hora: '20:30', bus: 5, placa: 'WRT-302', cond: 15 },
+      ];
+
+      const nuevosViajesGenerados: ViajeProgramado[] = horariosDefault.map((h, idx) => ({
+        id_viaje: maxId + idx + 1,
+        id_itinerario: 80 + idx,
+        id_bus: h.bus,
+        id_conductor: h.cond,
+        fecha: fecha,
+        hora_salida: h.hora,
+        estado_viaje: 'PROGRAMADO',
+        origen_ciudad: origen,
+        destino_ciudad: destino,
+        placa_bus: h.placa,
+      }));
+
+      setViajes((prev) => [...prev, ...nuevosViajesGenerados]);
+      return nuevosViajesGenerados;
+    },
+    [viajes, setViajes],
+  );
+
   const restablecerDatosSemilla = useCallback(() => {
     setClientes(clientesSeed);
+    setViajes(viajesProgramadosSeed);
     setTiquetes(tiquetesSeed);
     setFacturas(facturasSeed);
     setGuias(guiasSeed);
     setRemesas(remesasSeed);
-  }, [setClientes, setTiquetes, setFacturas, setGuias, setRemesas]);
+  }, [setClientes, setViajes, setTiquetes, setFacturas, setGuias, setRemesas]);
 
   const value = useMemo<DataContextValue>(
     () => ({
@@ -343,6 +417,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       consolidarEnRemesa,
       cambiarEstadoGuia,
       restablecerDatosSemilla,
+      buscarOProgramarViajes,
     }),
     [
       clientes,
@@ -360,6 +435,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       consolidarEnRemesa,
       cambiarEstadoGuia,
       restablecerDatosSemilla,
+      buscarOProgramarViajes,
     ],
   );
 
