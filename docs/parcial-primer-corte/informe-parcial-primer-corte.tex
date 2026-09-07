@@ -551,13 +551,23 @@ simulado, coherente con RF04 (factura debe emitir CUFE) y con la postcondición 
 El formulario de cubicaje calcula el peso volumétrico en tiempo real a partir de las dimensiones
 del paquete y muestra la alerta de sobrepeso cuando corresponde, junto con una liquidación
 dinámica del flete (tarifa base por kg, recargo por categoría y total) coherente con RF05
-(cálculo automático de valor según peso/categoría).
+(cálculo automático de valor según peso/categoría). Al generar la guía se produce además un rótulo
+de despacho imprimible, con código de barras, sello de advertencia según categoría de mercancía
+(frágil, perecedera, valores) y los datos de remitente/destinatario para bodega.
 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.82\linewidth]{capturas/gui-06-mensajeria-cubicaje.png}
   \caption{Módulo de Mensajería --- cubicaje, alerta de sobrepeso y liquidación de flete (RF05)}
   \label{fig:gui-mensajeria}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.62\linewidth]{capturas/gui-08-mensajeria-rotulo.png}
+  \caption{Rótulo de despacho imprimible generado al admitir una guía de categoría Frágil, con
+  código de barras, sello de advertencia y datos de remitente/destinatario}
+  \label{fig:gui-rotulo}
 \end{figure}
 
 \clearpage
